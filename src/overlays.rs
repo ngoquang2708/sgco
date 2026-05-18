@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 
 pub static DEFAULT_OVERLAYS: LazyLock<HashMap<String, Overlay>> = LazyLock::new(|| {
     let overlays = [
-        "292030|The Witcher 3|%STEAMUSER%/Documents/The Witcher 3|user.settings",
+        "292030|The Witcher 3|%STEAMUSER%/Documents/The Witcher 3|dx12user.settings,user.settings",
         "499450|The Witcher 3|%STEAMUSER%/Documents/The Witcher 3|user.settings",
         "814380|Sekiro|%STEAMUSER%/AppData/Roaming/Sekiro|GraphicsConfig.xml",
         "524220|NieR Automata|%STEAMUSER%/Documents/My Games/NieR_Automata|SystemData.dat",
