@@ -1,0 +1,73 @@
+use std::fs;
+use std::path::PathBuf;
+use std::process::Command;
+
+use anyhow::{Context as _, bail};
+use clap::Parser as _;
+use directories::BaseDirs;
+
+use sgco::cli::CliArgs;
+use sgco::overlays::{DEFAULT_OVERLAYS, Overlay};
+use sgco::steam::{Envars, SteamId, steam_id};
+
+fn main() {
+    run().unwrap();
+}
+
+fn run() -> anyhow::Result<()> {
+    let cli_args = CliArgs::try_parse()?;
+    if cli_args.cmd.is_empty() {
+        bail!("Game launch command is not provided!");
+    }
+    let envars = Envars::parse()?;
+    let steam_id = steam_id(&envars.user)?;
+    let overlay = match cli_args.r#override {
+        Some(o) => {
+            let (app_id, overlay) = Overlay::parse(&o)
+                .with_context(|| format!("Failed to parse overlay string: {o}"))?;
+            if app_id != envars.app_id {
+                bail!("SteamAppId mismatch: envar={} override={}", envars.app_id, app_id);
+            }
+            overlay
+        }
+        None => DEFAULT_OVERLAYS
+            .get(&envars.app_id)
+            .cloned()
+            .context(format!("No overlay config found for SteamAppId={}!", envars.app_id))?,
+    };
+    let app_cfg_dir = replace_placeholders(&envars, &steam_id, &overlay);
+    let overlay_cfg_dir = BaseDirs::new()
+        .context("reading base dirs")?
+        .config_dir()
+        .join("sgco")
+        .join(format!("{} - {}", envars.app_id, overlay.app_name));
+    let mut bwrap = Command::new("bwrap");
+    bwrap.arg("--dev-bind").arg("/").arg("/");
+    for file in &overlay.cfg_files {
+        let app_cfg = app_cfg_dir.join(file);
+        let overlay_cfg = overlay_cfg_dir.join(file);
+        if let Some(parent) = overlay_cfg.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        if !overlay_cfg.exists() {
+            fs::copy(&app_cfg, &overlay_cfg)?;
+        }
+        bwrap.arg("--bind").arg(overlay_cfg).arg(app_cfg);
+    }
+    bwrap.arg("--").args(cli_args.cmd);
+    let _ = bwrap.spawn()?.wait()?;
+    Ok(())
+}
+
+fn replace_placeholders(envars: &Envars, steam_id: &SteamId, overlay: &Overlay) -> PathBuf {
+    let replacements = [
+        ("%STEAMID%", steam_id),
+        ("%STEAMUSER%", &format!("{}/pfx/drive_c/users/steamuser", envars.compat_data_path)),
+        ("%STEAM_COMPAT_DATA_PATH%", &envars.compat_data_path),
+        ("%STEAM_COMPAT_INSTALL_PATH%", &envars.compat_install_path),
+    ];
+    replacements
+        .iter()
+        .fold(overlay.cfg_dir.clone(), |acc, (from, to)| acc.replace(from, to))
+        .into()
+}
