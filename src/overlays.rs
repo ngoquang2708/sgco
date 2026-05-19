@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::LazyLock;
+
+use crate::steam::{Envars, SteamId};
 
 pub static DEFAULT_OVERLAYS: LazyLock<HashMap<String, Overlay>> = LazyLock::new(|| {
     let overlays = [
@@ -17,6 +20,20 @@ pub static DEFAULT_OVERLAYS: LazyLock<HashMap<String, Overlay>> = LazyLock::new(
         .collect::<Option<_>>()
         .expect("some")
 });
+
+/// Replace placeholders in the config directory path to make an absolute path.
+pub fn replace_placeholders(envars: &Envars, steam_id: &SteamId, overlay: &Overlay) -> PathBuf {
+    let replacements = [
+        ("%STEAMID%", steam_id),
+        ("%STEAMUSER%", &format!("{}/pfx/drive_c/users/steamuser", envars.compat_data_path)),
+        ("%STEAM_COMPAT_DATA_PATH%", &envars.compat_data_path),
+        ("%STEAM_COMPAT_INSTALL_PATH%", &envars.compat_install_path),
+    ];
+    replacements
+        .iter()
+        .fold(overlay.cfg_dir.clone(), |acc, (from, to)| acc.replace(from, to))
+        .into()
+}
 
 #[derive(Debug, Clone)]
 pub struct Overlay {

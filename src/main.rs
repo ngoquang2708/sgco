@@ -1,5 +1,4 @@
 use std::fs;
-use std::path::PathBuf;
 use std::process::Command;
 
 use anyhow::{Context as _, bail};
@@ -7,8 +6,8 @@ use clap::Parser as _;
 use directories::BaseDirs;
 
 use sgco::cli::CliArgs;
-use sgco::overlays::{DEFAULT_OVERLAYS, Overlay};
-use sgco::steam::{Envars, SteamId, steam_id};
+use sgco::overlays::{DEFAULT_OVERLAYS, Overlay, replace_placeholders};
+use sgco::steam::{Envars, steam_id};
 
 fn main() {
     run().unwrap();
@@ -57,17 +56,4 @@ fn run() -> anyhow::Result<()> {
     bwrap.arg("--").args(cli_args.cmd);
     let _ = bwrap.spawn()?.wait()?;
     Ok(())
-}
-
-fn replace_placeholders(envars: &Envars, steam_id: &SteamId, overlay: &Overlay) -> PathBuf {
-    let replacements = [
-        ("%STEAMID%", steam_id),
-        ("%STEAMUSER%", &format!("{}/pfx/drive_c/users/steamuser", envars.compat_data_path)),
-        ("%STEAM_COMPAT_DATA_PATH%", &envars.compat_data_path),
-        ("%STEAM_COMPAT_INSTALL_PATH%", &envars.compat_install_path),
-    ];
-    replacements
-        .iter()
-        .fold(overlay.cfg_dir.clone(), |acc, (from, to)| acc.replace(from, to))
-        .into()
 }

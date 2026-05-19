@@ -45,6 +45,7 @@ pub struct User {
     pub most_recent: bool,
     pub timestamp: u64,
 }
+
 #[derive(Debug, Clone)]
 pub struct Envars {
     pub user: String,
