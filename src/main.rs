@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 use anyhow::{Context as _, bail};
@@ -41,7 +42,7 @@ fn run() -> anyhow::Result<()> {
         .join("sgco")
         .join(format!("{} - {}", envars.app_id, overlay.app_name));
     let mut bwrap = Command::new("bwrap");
-    bwrap.arg("--dev-bind").arg("/").arg("/");
+    bwrap.args(["--dev-bind", "/", "/"]);
     let mut new_cfgs = Vec::new();
     for file in &overlay.cfg_files {
         let app_cfg = app_cfg_dir.join(file);
@@ -63,9 +64,10 @@ fn run() -> anyhow::Result<()> {
                 continue;
             }
         }
-        bwrap.arg("--bind").arg(overlay_cfg).arg(app_cfg);
+        bwrap.args([Path::new("--bind"), &overlay_cfg, &app_cfg]);
     }
-    bwrap.arg("--").args(cli_args.cmd);
+    bwrap.arg("--");
+    bwrap.args(cli_args.cmd);
     let _ = bwrap
         .spawn()
         .context("spawn child process")?
