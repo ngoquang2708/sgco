@@ -40,9 +40,7 @@ pub struct User {
     #[serde_as(as = "BoolFromInt")]
     pub skip_offline_mode_warning: bool,
     #[serde_as(as = "BoolFromInt")]
-    pub allow_auto_login: bool,
-    #[serde_as(as = "BoolFromInt")]
-    pub most_recent: bool,
+    pub auto_login: bool,
     pub timestamp: u64,
 }
 
