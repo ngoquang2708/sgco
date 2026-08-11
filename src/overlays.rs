@@ -12,7 +12,6 @@ pub static DEFAULT_OVERLAYS: LazyLock<HashMap<String, Overlay>> = LazyLock::new(
         "524220|NieR Automata|%STEAMUSER%/Documents/My Games/NieR_Automata|SystemData.dat",
         "1113560|NieR Replicant|%STEAMUSER%/Documents/My Games/NieR Replicant ver.1.22474487139/Steam/%STEAMID%|drawing_settings.ini",
         "1151640|Horizon Zero Dawn|%STEAMUSER%/Documents/Horizon Zero Dawn/Saved Game/profile|graphicsconfig.ini",
-        "1245620|ELDEN RING|%STEAMUSER%/AppData/Roaming/EldenRing|GraphicsConfig.xml",
         "1903340|Expedition 33|%STEAMUSER%/AppData/Local/Sandfall/Saved/SaveGames/%STEAMID%|SharedGameUserSettings.sav",
     ];
     overlays
