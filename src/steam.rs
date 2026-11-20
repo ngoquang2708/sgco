@@ -41,6 +41,7 @@ pub struct User {
     pub skip_offline_mode_warning: bool,
     #[serde_as(as = "BoolFromInt")]
     pub auto_login: bool,
+    #[serde(alias = "timestamp")]
     pub timestamp: u64,
 }
 
@@ -55,7 +56,7 @@ pub struct Envars {
 impl Envars {
     pub fn parse() -> anyhow::Result<Self> {
         return Ok(Self {
-            user: envar("SteamUser")?,
+            user: envar("SteamAppUser")?,
             app_id: envar("SteamAppId")?,
             compat_data_path: envar("STEAM_COMPAT_DATA_PATH")?,
             compat_install_path: envar("STEAM_COMPAT_INSTALL_PATH")?,
